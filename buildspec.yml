@@ -1,0 +1,19 @@
+version: 0.2
+phases:
+  install:
+    commands:
+      - echo "updating git ..."; apt-get update; apt-get install -y python-software-properties software-properties-common; add-apt-repository ppa:git-core/ppa; apt-get update; apt-get install -y git
+      - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+      - echo "machine github.com login ${GH_USERNAME} password ${GH_TOKEN}" > ~/.netrc
+      - npm install -g npm@
+      - npm whoami
+      - export GK_LOCK_DEFAULT_BRANCH=saga
+      - npm i -g greenkeeper-lockfile@2
+      - npx greenkeeper-lockfile-update
+      - npm ci --no-audit
+  build:
+    commands:
+      - npm run lint
+      - npx tsc
+      - npx greenkeeper-lockfile-upload
+      - npm i semantic-release; npx semantic-release || true

@@ -1,0 +1,36 @@
+type Mutation {
+    publishEmail(
+        from: String!,
+        subject: String!,
+        to: [String!]!,
+        body: String!
+        timestamp: String!
+    ): Email
+}
+
+type Email {
+    from: String!
+    subject: String!
+    to: [String!]!
+    body: String!
+    timestamp: String!
+}
+
+type Query {
+    _: Boolean
+}
+
+type Schema {
+    mutation: Mutation
+    query: Query
+    subscription: Subscription
+}
+
+type Subscription {
+    emails(
+        from: String,
+        subject: String,
+        to: [String!],
+    ): Email
+    @aws_subscribe(mutations: ["publishEmail"])
+}
