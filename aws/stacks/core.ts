@@ -72,6 +72,7 @@ export class CoreStack extends Stack {
                 S3_BUCKET: bucket.bucketName,
                 DOMAIN_NAME: this.domainName.stringValue,
                 GRAPHQL_API_ENDPOINT: api.api.graphQlApiGraphQlUrl,
+                GRAPHQL_API_KEY: api.apiKey.apiKey,
             },
             initialPolicy: [
                 new PolicyStatement(PolicyStatementEffect.Allow)
@@ -79,13 +80,6 @@ export class CoreStack extends Stack {
                     .addAction('logs:CreateLogGroup')
                     .addAction('logs:CreateLogStream')
                     .addAction('logs:PutLogEvents'),
-                new PolicyStatement(PolicyStatementEffect.Allow)
-                    .addAction('appsync:GraphQL')
-                    .addResource(
-                        `${
-                            api.api.graphQlApiArn
-                        }/types/Mutation/fields/publishEmail`,
-                    ),
                 new PolicyStatement(PolicyStatementEffect.Allow)
                     .addResource(`${bucket.bucketArn}/*`)
                     .addActions('s3:GetObject'),

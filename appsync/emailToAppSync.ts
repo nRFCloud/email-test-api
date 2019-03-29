@@ -1,5 +1,4 @@
-import * as AWS from 'aws-sdk';
-import { Credentials, Endpoint, HttpRequest, S3 } from 'aws-sdk';
+import { S3 } from 'aws-sdk';
 import { parse } from 'url';
 import fetch from 'node-fetch';
 
@@ -7,15 +6,7 @@ const s3 = new S3();
 
 const Bucket = process.env.S3_BUCKET!;
 const graphQLEndpoint = parse(process.env.GRAPHQL_API_ENDPOINT!);
-
-AWS.config.update({
-    region: process.env.AWS_REGION,
-    credentials: new AWS.Credentials(
-        process.env.AWS_ACCESS_KEY_ID!,
-        process.env.AWS_SECRET_ACCESS_KEY!,
-        process.env.AWS_SESSION_TOKEN!,
-    ),
-});
+const apiKey = process.env.GRAPHQL_API_KEY!;
 
 const publishEmailMutation = `mutation publishEmail($from: String, $subject: String!, $to: [String!]!, $body: String!, $timestamp: String!) {
         publishTenantAggregateEvent(from: $from, subject: $subject, to: $to, body: $body, timestamp: $timestamp) {
@@ -104,35 +95,13 @@ export const handler = async (event: SESEvent) => {
 };
 
 const publishEmail = async (mutation: object) => {
-    const credentials = await new Promise((resolve, reject) => {
-        (<Credentials>AWS.config.credentials).get(err => {
-            if (err) {
-                return reject(err);
-            }
-            return resolve(AWS.config.credentials!);
-        });
-    });
-
-    const httpRequest = new HttpRequest(
-        new Endpoint(graphQLEndpoint.href!),
-        process.env.AWS_REGION!,
-    );
-    httpRequest.headers.host = graphQLEndpoint.host!;
-    httpRequest.headers['Content-Type'] = 'application/json';
-    httpRequest.method = 'POST';
-    // @ts-ignore Signers is not a public API
-    httpRequest.region = process.env.AWS_REGION;
-    httpRequest.body = JSON.stringify(mutation);
-
-    // @ts-ignore Signers is not a public API
-    const signer = new AWS.Signers.V4(httpRequest, 'appsync', true);
-    // @ts-ignore AWS.util is not a public API
-    signer.addAuthorization(credentials, new Date());
-
     const options = {
-        method: httpRequest.method,
-        body: httpRequest.body,
-        headers: httpRequest.headers,
+        method: 'POST',
+        body: JSON.stringify(mutation),
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+        },
     };
 
     try {
