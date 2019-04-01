@@ -1,19 +1,29 @@
+type Email {
+    from: String!
+    subject: String!
+    to: [String!]!
+    body: EmailBody!
+    timestamp: String!
+}
+
+type EmailBody {
+    text: String!
+    html: String
+}
+
+input EmailBodyInput {
+    text: String!
+    html: String
+}
+
 type Mutation {
     publishEmail(
         from: String!,
         subject: String!,
         to: [String!]!,
-        body: String!
+        body: EmailBodyInput!,
         timestamp: String!
     ): Email
-}
-
-type Email {
-    from: String!
-    subject: String!
-    to: [String!]!
-    body: String!
-    timestamp: String!
 }
 
 type Query {
@@ -27,10 +37,6 @@ type Schema {
 }
 
 type Subscription {
-    emails(
-        from: String,
-        subject: String,
-        to: [String!],
-    ): Email
+    emails(from: String, subject: String, to: [String!]): Email
     @aws_subscribe(mutations: ["publishEmail"])
 }

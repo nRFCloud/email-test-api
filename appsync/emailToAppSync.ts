@@ -1,6 +1,7 @@
 import { S3 } from 'aws-sdk';
 import { parse } from 'url';
 import fetch from 'node-fetch';
+import { simpleParser } from 'mailparser';
 
 const s3 = new S3();
 
@@ -8,12 +9,15 @@ const Bucket = process.env.S3_BUCKET!;
 const graphQLEndpoint = parse(process.env.GRAPHQL_API_ENDPOINT!);
 const apiKey = process.env.GRAPHQL_API_KEY!;
 
-const publishEmailMutation = `mutation publishEmail($from: String, $subject: String!, $to: [String!]!, $body: String!, $timestamp: String!) {
-        publishTenantAggregateEvent(from: $from, subject: $subject, to: $to, body: $body, timestamp: $timestamp) {
+const publishEmailMutation = `mutation publishEmail($from: String!, $subject: String!, $to: [String!]!, $body: EmailBodyInput!, $timestamp: String!) {
+        publishEmail(from: $from, subject: $subject, to: $to, body: $body, timestamp: $timestamp) {
             from
             subject
             to
-            body
+            body {
+              text
+              html
+            }
             timestamp
         }
     }`;
@@ -62,7 +66,10 @@ type GQLMail = {
     from: string;
     subject: string;
     to: string[];
-    body: string;
+    body: {
+        text: string;
+        html?: string;
+    };
     timestamp: string;
 };
 
@@ -76,12 +83,17 @@ export const handler = async (event: SESEvent) => {
                 })
                 .promise();
 
+            const { html, text } = await simpleParser(Body!.toString());
+
             const mail: GQLMail = {
                 from: r.ses.mail.commonHeaders.from[0],
                 to: r.ses.mail.commonHeaders.to,
                 subject: r.ses.mail.commonHeaders.subject,
                 timestamp: r.ses.receipt.timestamp,
-                body: (Body && Body.toString()) || '',
+                body: {
+                    text,
+                    html: html ? (html as string) : undefined,
+                },
             };
             console.log(JSON.stringify(mail));
 
@@ -90,6 +102,13 @@ export const handler = async (event: SESEvent) => {
                 operationName: 'publishEmail',
                 variables: mail,
             });
+
+            await s3
+                .deleteObject({
+                    Bucket,
+                    Key: r.ses.mail.messageId,
+                })
+                .promise();
         }),
     );
 };

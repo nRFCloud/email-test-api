@@ -82,7 +82,8 @@ export class CoreStack extends Stack {
                     .addAction('logs:PutLogEvents'),
                 new PolicyStatement(PolicyStatementEffect.Allow)
                     .addResource(`${bucket.bucketArn}/*`)
-                    .addActions('s3:GetObject'),
+                    .addActions('s3:GetObject')
+                    .addActions('s3:DeleteObject'),
             ],
             layers: [baseLayer],
         });

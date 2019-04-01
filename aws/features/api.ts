@@ -10,6 +10,8 @@ import {
     CfnGraphQLApi,
     CfnGraphQLSchema,
     CfnApiKey,
+    CfnResolver,
+    CfnDataSource,
 } from '@aws-cdk/aws-appsync';
 import { readFileSync } from 'fs';
 import * as path from 'path';
@@ -29,7 +31,7 @@ export class ApiFeature extends Construct {
                 .addResource(
                     `arn:aws:logs:${stack.region}:${
                         stack.accountId
-                    }:/aws/lambda/*`,
+                    }:/aws/appsync/apis/*`,
                 )
                 .addAction('logs:CreateLogGroup')
                 .addAction('logs:CreateLogStream')
@@ -37,7 +39,7 @@ export class ApiFeature extends Construct {
         );
 
         this.api = new CfnGraphQLApi(this, 'Api', {
-            name: 'Ausgaben',
+            name: 'SMTPtoGQL',
             authenticationType: 'API_KEY',
             logConfig: {
                 fieldLogLevel: 'ALL',
@@ -64,6 +66,31 @@ export class ApiFeature extends Construct {
                 ),
                 'utf-8',
             ),
+        });
+
+        const noneDataSource = new CfnDataSource(this, `noneDataSource`, {
+            apiId: this.api.graphQlApiApiId,
+            name: `noneDataSource`,
+            type: 'NONE',
+        });
+
+        new CfnResolver(this, `publishEmailMutationResolver`, {
+            apiId: this.api.graphQlApiApiId,
+            typeName: 'Mutation',
+            fieldName: 'publishEmail',
+            dataSourceName: noneDataSource.dataSourceName,
+            requestMappingTemplate:
+                '{"version" : "2017-02-28",  "payload": $util.toJson($context.arguments)}',
+            responseMappingTemplate: `$util.toJson($context.result)`,
+        });
+
+        new CfnResolver(this, `emailsSubscriptionResolver`, {
+            apiId: this.api.graphQlApiApiId,
+            typeName: 'Subscription',
+            fieldName: 'emails',
+            dataSourceName: noneDataSource.dataSourceName,
+            requestMappingTemplate: `{"version" : "2017-02-28",  "payload": $util.toJson($context.arguments)}`,
+            responseMappingTemplate: `null`,
         });
 
         this.apiKey = new CfnApiKey(this, 'apiKey', {
