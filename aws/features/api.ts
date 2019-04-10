@@ -93,8 +93,9 @@ export class ApiFeature extends Construct {
             responseMappingTemplate: `null`,
         });
 
-        this.apiKey = new CfnApiKey(this, 'apiKey', {
+        this.apiKey = new CfnApiKey(this, `apiKey${new Date().getFullYear()}`, {
             apiId: this.api.graphQlApiApiId,
+            expires: Math.floor(Date.now() / 1000) + 365 * 24 * 60 * 60, // 1 year is max lifetime
         });
     }
 }
