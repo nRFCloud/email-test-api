@@ -22,6 +22,7 @@ Make sure your have AWS credentials in your environment.
     # if this is the run the first time in an account
     npx cdk -a 'node dist/cloudformation-sourcecode.js' deploy
 
+    export DOMAIN_NAME=yourdomain.tld
     npx cdk deploy
 
 ### Activate Ruleset
