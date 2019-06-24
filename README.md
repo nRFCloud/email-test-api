@@ -2,6 +2,10 @@
 
 GraphQL API for receiving emails in order to e2e test email sending built on top of AWS.
 
+## Component Diagram
+
+[![Component Diagram](./docs/Component%20diagram_%20Email%20Test%20API%20-%20Email%20Test%20API.jpg)](https://miro.com/app/board/o9J_kxMnIv0=/)
+
 ## Setup
 
 ### Prerequisites
