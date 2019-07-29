@@ -1,4 +1,4 @@
-import { App } from '@aws-cdk/cdk';
+import { App } from '@aws-cdk/core';
 import { LambdaSourcecodeStorageStack } from '../stacks/lambda-sourcecode-storage';
 
 export const SourceCodeStackName = `${process.env.STACK_NAME ||

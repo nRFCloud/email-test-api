@@ -33,5 +33,5 @@ const path = require('path');
             Bucket,
         }),
         layeredLambdas,
-    ).run();
+    ).synth();
 })();

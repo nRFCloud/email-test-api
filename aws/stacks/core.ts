@@ -4,13 +4,14 @@ import {
     CfnParameter,
     RemovalPolicy,
     Stack,
-} from '@aws-cdk/cdk';
+    Duration,
+} from '@aws-cdk/core';
 import { Code, Function, LayerVersion, Runtime } from '@aws-cdk/aws-lambda';
 import { Bucket } from '@aws-cdk/aws-s3';
 import { EmailTestApiAppLayeredLambdas } from '../resources/lambdas';
 import { ApiFeature } from '../features/api';
-import { PolicyStatement, PolicyStatementEffect } from '@aws-cdk/aws-iam';
-import { LogGroup } from '@aws-cdk/aws-logs';
+import { PolicyStatement } from '@aws-cdk/aws-iam';
+import { LogGroup, RetentionDays } from '@aws-cdk/aws-logs';
 import { ReceiveEmailsFeature } from '../features/receiveEmails';
 
 export class CoreStack extends Stack {
@@ -34,29 +35,33 @@ export class CoreStack extends Stack {
             type: 'String',
         });
 
-        const sourceCodeBucket = Bucket.import(this, 'SourceCodeBucket', {
-            bucketName: sourceCodeBucketName,
-        });
+        const sourceCodeBucket = Bucket.fromBucketAttributes(
+            this,
+            'SourceCodeBucket',
+            {
+                bucketName: sourceCodeBucketName,
+            },
+        );
 
         const baseLayer = new LayerVersion(this, `${id}-layer`, {
             code: Code.bucket(sourceCodeBucket, baseLayerZipFileName),
-            compatibleRuntimes: [Runtime.NodeJS810],
+            compatibleRuntimes: [Runtime.NODEJS_8_10],
         });
 
         const api = new ApiFeature(this, 'api');
 
         new CfnOutput(this, 'apiUrl', {
-            value: api.api.graphQlApiGraphQlUrl,
-            export: `${this.name}:apiUrl`,
+            value: api.api.attrGraphQlUrl,
+            exportName: `${this.stackName}:apiUrl`,
         });
 
         new CfnOutput(this, 'apiKey', {
-            value: api.apiKey.apiKey,
-            export: `${this.name}:apiKey`,
+            value: api.apiKey.attrApiKey,
+            exportName: `${this.stackName}:apiKey`,
         });
 
         const bucket = new Bucket(this, 'emailStore', {
-            removalPolicy: RemovalPolicy.Orphan,
+            removalPolicy: RemovalPolicy.RETAIN,
         });
 
         const el = new Function(this, 'emailToAppSync', {
@@ -65,33 +70,36 @@ export class CoreStack extends Stack {
                 layeredLambdas.lambdaZipFileNames.emailToAppSync,
             ),
             handler: 'index.handler',
-            runtime: Runtime.NodeJS810,
-            timeout: 30,
+            runtime: Runtime.NODEJS_8_10,
+            timeout: Duration.seconds(30),
             memorySize: 1792,
             environment: {
                 S3_BUCKET: bucket.bucketName,
-                DOMAIN_NAME: this.domainName.stringValue,
-                GRAPHQL_API_ENDPOINT: api.api.graphQlApiGraphQlUrl,
-                GRAPHQL_API_KEY: api.apiKey.apiKey,
+                DOMAIN_NAME: this.domainName.value,
+                GRAPHQL_API_ENDPOINT: api.api.attrGraphQlUrl,
+                GRAPHQL_API_KEY: api.apiKey.attrApiKey,
             },
             initialPolicy: [
-                new PolicyStatement(PolicyStatementEffect.Allow)
-                    .addResource('arn:aws:logs:*:*:*')
-                    .addAction('logs:CreateLogGroup')
-                    .addAction('logs:CreateLogStream')
-                    .addAction('logs:PutLogEvents'),
-                new PolicyStatement(PolicyStatementEffect.Allow)
-                    .addResource(`${bucket.bucketArn}/*`)
-                    .addActions('s3:GetObject')
-                    .addActions('s3:DeleteObject'),
+                new PolicyStatement({
+                    resources: ['arn:aws:logs:*:*:*'],
+                    actions: [
+                        'logs:CreateLogGroup',
+                        'logs:CreateLogStream',
+                        'logs:PutLogEvents',
+                    ],
+                }),
+                new PolicyStatement({
+                    resources: [`${bucket.bucketArn}/*`],
+                    actions: ['s3:GetObject', 's3:DeleteObject'],
+                }),
             ],
             layers: [baseLayer],
         });
 
         new LogGroup(this, `LogGroup`, {
-            retainLogGroup: false,
+            retention: RetentionDays.ONE_WEEK,
+            removalPolicy: RemovalPolicy.DESTROY,
             logGroupName: `/aws/lambda/${el.functionName}`,
-            retentionDays: 7,
         });
 
         new ReceiveEmailsFeature(

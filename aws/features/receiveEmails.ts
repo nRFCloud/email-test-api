@@ -1,4 +1,4 @@
-import { CfnParameter, Construct, RemovalPolicy, Stack } from '@aws-cdk/cdk';
+import { CfnParameter, Construct, RemovalPolicy, Stack } from '@aws-cdk/core';
 import { IFunction } from '@aws-cdk/aws-lambda';
 import { ServicePrincipal } from '@aws-cdk/aws-iam';
 import { IBucket } from '@aws-cdk/aws-s3';
@@ -24,7 +24,7 @@ export class ReceiveEmailsFeature extends Construct {
         super(stack, id);
 
         this.bucket = new Bucket(this, 'emailStore', {
-            removalPolicy: RemovalPolicy.Orphan,
+            removalPolicy: RemovalPolicy.RETAIN,
         });
 
         const ruleSet = new ReceiptRuleSet(this, 'receiveAll', {
@@ -33,14 +33,14 @@ export class ReceiveEmailsFeature extends Construct {
 
         new ReceiptRule(this, 'rule', {
             ruleSet,
-            recipients: [domain.stringValue],
+            recipients: [domain.valueAsString],
             actions: [
                 new ReceiptRuleS3Action({
                     bucket,
                 }),
                 new ReceiptRuleLambdaAction({
                     function: lambda,
-                    invocationType: LambdaInvocationType.Event,
+                    invocationType: LambdaInvocationType.EVENT,
                 }),
             ],
         });

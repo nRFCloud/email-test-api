@@ -1,11 +1,6 @@
-import { Construct, Stack } from '@aws-cdk/cdk';
-import {
-    PolicyStatement,
-    PolicyStatementEffect,
-    Role,
-    ServicePrincipal,
-} from '@aws-cdk/aws-iam';
-import { LogGroup } from '@aws-cdk/aws-logs';
+import { Construct, Stack, RemovalPolicy } from '@aws-cdk/core';
+import { PolicyStatement, Role, ServicePrincipal } from '@aws-cdk/aws-iam';
+import { LogGroup, RetentionDays } from '@aws-cdk/aws-logs';
 import {
     CfnGraphQLApi,
     CfnGraphQLSchema,
@@ -27,15 +22,16 @@ export class ApiFeature extends Construct {
             assumedBy: new ServicePrincipal('appsync.amazonaws.com'),
         });
         apiRole.addToPolicy(
-            new PolicyStatement(PolicyStatementEffect.Allow)
-                .addResource(
-                    `arn:aws:logs:${stack.region}:${
-                        stack.accountId
-                    }:/aws/appsync/apis/*`,
-                )
-                .addAction('logs:CreateLogGroup')
-                .addAction('logs:CreateLogStream')
-                .addAction('logs:PutLogEvents'),
+            new PolicyStatement({
+                resources: [
+                    `arn:aws:logs:${stack.region}:${stack.account}:/aws/appsync/apis/*`,
+                ],
+                actions: [
+                    'logs:CreateLogGroup',
+                    'logs:CreateLogStream',
+                    'logs:PutLogEvents',
+                ],
+            }),
         );
 
         this.api = new CfnGraphQLApi(this, 'Api', {
@@ -48,13 +44,13 @@ export class ApiFeature extends Construct {
         });
 
         new LogGroup(this, 'LogGroup', {
-            retainLogGroup: false,
-            logGroupName: `/aws/appsync/apis/${this.api.graphQlApiApiId}`,
-            retentionDays: 7,
+            retention: RetentionDays.ONE_WEEK,
+            removalPolicy: RemovalPolicy.DESTROY,
+            logGroupName: `/aws/appsync/apis/${this.api.attrApiId}`,
         });
 
         new CfnGraphQLSchema(this, 'Schema', {
-            apiId: this.api.graphQlApiApiId,
+            apiId: this.api.attrApiId,
             definition: readFileSync(
                 path.resolve(
                     __dirname,
@@ -69,32 +65,32 @@ export class ApiFeature extends Construct {
         });
 
         const noneDataSource = new CfnDataSource(this, `noneDataSource`, {
-            apiId: this.api.graphQlApiApiId,
+            apiId: this.api.attrApiId,
             name: `noneDataSource`,
             type: 'NONE',
         });
 
         new CfnResolver(this, `publishEmailMutationResolver`, {
-            apiId: this.api.graphQlApiApiId,
+            apiId: this.api.attrApiId,
             typeName: 'Mutation',
             fieldName: 'publishEmail',
-            dataSourceName: noneDataSource.dataSourceName,
+            dataSourceName: noneDataSource.attrName,
             requestMappingTemplate:
                 '{"version" : "2017-02-28",  "payload": $util.toJson($context.arguments)}',
             responseMappingTemplate: `$util.toJson($context.result)`,
         });
 
         new CfnResolver(this, `emailsSubscriptionResolver`, {
-            apiId: this.api.graphQlApiApiId,
+            apiId: this.api.attrApiId,
             typeName: 'Subscription',
             fieldName: 'emails',
-            dataSourceName: noneDataSource.dataSourceName,
+            dataSourceName: noneDataSource.attrName,
             requestMappingTemplate: `{"version" : "2017-02-28",  "payload": $util.toJson($context.arguments)}`,
             responseMappingTemplate: `null`,
         });
 
         this.apiKey = new CfnApiKey(this, `apiKey${new Date().getFullYear()}`, {
-            apiId: this.api.graphQlApiApiId,
+            apiId: this.api.attrApiId,
             expires: Math.floor(Date.now() / 1000) + 365 * 24 * 60 * 60, // 1 year is max lifetime
         });
     }
