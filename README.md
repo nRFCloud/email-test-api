@@ -19,7 +19,7 @@ This service uses AWS SES to receive emails, so you need a verified domain name 
 To verify a domain in your account for use with SES:
 
 1. When the domain zone is created by Route53, [in SES](https://console.aws.amazon.com/ses/home#verified-senders-domain:) click *Create a New Domain*.
-1. Enter "test-mails.<YOUR_NEW_DOMAIN>", e.g., "test-mails.nrfcloudtest123.com", and check *Generate DKIM Settings*.
+1. Enter "<YOUR_NEW_DOMAIN>", e.g., "nrfcloudtest123.com", and check *Generate DKIM Settings*.
 1. In the next dialog click *Use Route 53* to set the domain records automatically.
 1. Wait for verification, which is usually < 1 hour. See https://docs.aws.amazon.com/ses/latest/DeveloperGuide/verify-domain-procedure.html
 
