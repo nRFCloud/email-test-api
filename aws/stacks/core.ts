@@ -75,7 +75,7 @@ export class CoreStack extends Stack {
             memorySize: 1792,
             environment: {
                 S3_BUCKET: bucket.bucketName,
-                DOMAIN_NAME: this.domainName.value,
+                DOMAIN_NAME: this.domainName.value.toString(),
                 GRAPHQL_API_ENDPOINT: api.api.attrGraphQlUrl,
                 GRAPHQL_API_KEY: api.apiKey.attrApiKey,
             },

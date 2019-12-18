@@ -2,13 +2,8 @@ import { CfnParameter, Construct, RemovalPolicy, Stack } from '@aws-cdk/core';
 import { IFunction } from '@aws-cdk/aws-lambda';
 import { ServicePrincipal } from '@aws-cdk/aws-iam';
 import { IBucket } from '@aws-cdk/aws-s3';
-import {
-    LambdaInvocationType,
-    ReceiptRule,
-    ReceiptRuleLambdaAction,
-    ReceiptRuleSet,
-    ReceiptRuleS3Action,
-} from '@aws-cdk/aws-ses';
+import { ReceiptRule, ReceiptRuleSet } from '@aws-cdk/aws-ses';
+import { LambdaInvocationType, S3, Lambda } from '@aws-cdk/aws-ses-actions';
 import { Bucket } from '@aws-cdk/aws-s3';
 
 export class ReceiveEmailsFeature extends Construct {
@@ -35,10 +30,8 @@ export class ReceiveEmailsFeature extends Construct {
             ruleSet,
             recipients: [domain.valueAsString],
             actions: [
-                new ReceiptRuleS3Action({
-                    bucket,
-                }),
-                new ReceiptRuleLambdaAction({
+                new S3({ bucket }),
+                new Lambda({
                     function: lambda,
                     invocationType: LambdaInvocationType.EVENT,
                 }),
