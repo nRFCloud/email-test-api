@@ -45,7 +45,7 @@ export class CoreStack extends Stack {
 
         const baseLayer = new LayerVersion(this, `${id}-layer`, {
             code: Code.bucket(sourceCodeBucket, baseLayerZipFileName),
-            compatibleRuntimes: [Runtime.NODEJS_8_10],
+            compatibleRuntimes: [Runtime.NODEJS_12_X],
         });
 
         const api = new ApiFeature(this, 'api');
@@ -70,7 +70,7 @@ export class CoreStack extends Stack {
                 layeredLambdas.lambdaZipFileNames.emailToAppSync,
             ),
             handler: 'index.handler',
-            runtime: Runtime.NODEJS_8_10,
+            runtime: Runtime.NODEJS_12_X,
             timeout: Duration.seconds(30),
             memorySize: 1792,
             environment: {
