@@ -1,7 +1,7 @@
 import { App } from '@aws-cdk/core';
 import { LambdaSourcecodeStorageStack } from '../stacks/lambda-sourcecode-storage';
 
-export const SourceCodeStackName = `${process.env.STACK_NAME ||
+export const SourceCodeStackName = `${process.env.EMAIL_TEST_API_STACK_NAME ||
     'email-test-api'}-sourcecode`;
 
 /**

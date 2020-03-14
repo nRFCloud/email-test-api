@@ -24,7 +24,7 @@ const path = require('path');
     const layeredLambdas = await lambdas(rootDir, outDir, Bucket);
 
     new EmailTestApiApp(
-        process.env.STACK_NAME || 'email-test-api',
+        process.env.EMAIL_TEST_API_STACK_NAME || 'email-test-api',
         process.env.DOMAIN_NAME || 'example.com',
         Bucket,
         await packBaseLayer({
