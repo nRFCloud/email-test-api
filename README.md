@@ -16,16 +16,35 @@ This service uses AWS SES to receive emails to your Hosted Zone Name. See the [E
 
 Make sure your have AWS credentials in your environment.
 
+Optional:
+
+    export EMAIL_TEST_API_STACK_NAME=<whatever you like>
+
+The actual stack name will be this variable with `-sourcecode` appended.
+If you don't set the variable, the stack will be named `email-test-api-sourcecode`.
+
     npm ci
     npx tsc
-    
-    # if this is the first time you are setting up this project's stack in your account:
+    # If this is the first time running CDK of any deployment in your account:
+    # (Substitute your AWS account number and AWS region name)
+    npx cdk bootstrap aws://123456789012/us-east-1
+    # If this is the first time you are setting up this project's stack in your account:
     npx cdk -a 'node dist/aws/cloudformation-sourcecode.js' deploy
 
-    export DOMAIN_NAME=<YOUR_HOSTED_ZONE_NAME_
+    # Use either your own hosted zone name e.g. lith.nrfcloud.com, or one of the stage's
+    # zone names [dev|beta].nrfcloud.com or just nrfcloud.com for production.
+    export DOMAIN_NAME=<hosted zone name>
     npx cdk deploy
 
 ### Activate Ruleset
 
 When the stack is complete a new SES ruleset (`receiveEmailsreceiveAllxxx`) will be created. This needs to be [manually set to Active](https://console.aws.amazon.com/ses/home?region=us-east-1#receipt-rules:) since it cannot be done using CloudFormation.
 
+## Remove
+
+Before deleting the stacks, you must [manually set the old default rule set to Active](https://console.aws.amazon.com/ses/home?region=us-east-1#receipt-rules:), which makes the `receiveEmailsreceiveAllxxx` rule set inactive.
+
+Delete the stacks by running:
+
+    npx cdk -a 'node dist/aws/cloudformation.js' destroy -f
+    npx cdk -a 'node dist/aws/cloudformation-sourcecode.js' destroy -f
