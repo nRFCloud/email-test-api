@@ -25,16 +25,26 @@ If you don't set the variable, the stack will be named `email-test-api-sourcecod
 
     npm ci
     npx tsc
-    # If this is the first time running CDK of any deployment in your account:
-    # (Substitute your AWS account number and AWS region name)
-    npx cdk bootstrap aws://123456789012/us-east-1
-    # If this is the first time you are setting up this project's stack in your account:
-    npx cdk -a 'node dist/aws/cloudformation-sourcecode.js' deploy
+If this is your first time running CDK on your account, run:
 
-    # Use either your own hosted zone name e.g. lith.nrfcloud.com, or one of the stage's
-    # zone names [dev|beta].nrfcloud.com or just nrfcloud.com for production.
+    npx cdk bootstrap
+
+If you get errors about missing the account number and region, do it this way instead:
+
+    npx cdk bootstrap aws://123456789012/us-east-1
+
+...substituting your AWS account number and AWS region name.
+
+If this is the first time you are setting up this project's stack in your account:
+
+    npx cdk -a 'node dist/aws/cloudformation-sourcecode.js' deploy  --require-approval never
+
+For the DOMAIN_NAME below, use either your own hosted zone name e.g. lith.nrfcloud.com, or one of the stage's
+zone names `[dev|beta].nrfcloud.com` or just `nrfcloud.com` for production. Set it to something,
+because there is no valid default (it's `example.com` which you never want).
+
     export DOMAIN_NAME=<hosted zone name>
-    npx cdk deploy
+    npx cdk deploy --require-approval never
 
 ### Activate Ruleset
 
