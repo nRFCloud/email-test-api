@@ -16,16 +16,45 @@ This service uses AWS SES to receive emails to your Hosted Zone Name. See the [E
 
 Make sure your have AWS credentials in your environment.
 
+Optional:
+
+    export EMAIL_TEST_API_STACK_NAME=<whatever you like>
+
+The actual stack name will be this variable with `-sourcecode` appended.
+If you don't set the variable, the stack will be named `email-test-api-sourcecode`.
+
     npm ci
     npx tsc
-    
-    # if this is the first time you are setting up this project's stack in your account:
-    npx cdk -a 'node dist/aws/cloudformation-sourcecode.js' deploy
+If this is your first time running CDK on your account, run:
 
-    export DOMAIN_NAME=<YOUR_HOSTED_ZONE_NAME_
-    npx cdk deploy
+    npx cdk bootstrap
+
+If you get errors about missing the account number and region, do it this way instead:
+
+    npx cdk bootstrap aws://123456789012/us-east-1
+
+...substituting your AWS account number and AWS region name.
+
+If this is the first time you are setting up this project's stack in your account:
+
+    npx cdk -a 'node dist/aws/cloudformation-sourcecode.js' deploy  --require-approval never
+
+For the DOMAIN_NAME below, use either your own hosted zone name e.g. lith.nrfcloud.com, or one of the stage's
+zone names `[dev|beta].nrfcloud.com` or just `nrfcloud.com` for production. Set it to something,
+because there is no valid default (it's `example.com` which you never want).
+
+    export DOMAIN_NAME=<hosted zone name>
+    npx cdk deploy --require-approval never
 
 ### Activate Ruleset
 
 When the stack is complete a new SES ruleset (`receiveEmailsreceiveAllxxx`) will be created. This needs to be [manually set to Active](https://console.aws.amazon.com/ses/home?region=us-east-1#receipt-rules:) since it cannot be done using CloudFormation.
 
+## Remove
+
+Before deleting the stacks, you must [manually set the old default rule set to Active](https://console.aws.amazon.com/ses/home?region=us-east-1#receipt-rules:), which makes the `receiveEmailsreceiveAllxxx` rule set inactive.
+
+Delete the stacks by running:
+
+    npx cdk -a 'node dist/aws/cloudformation.js' destroy -f
+    npx cdk -a 'node dist/aws/cloudformation-sourcecode.js' destroy -f
