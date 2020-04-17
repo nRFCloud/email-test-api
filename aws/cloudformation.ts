@@ -7,7 +7,6 @@ import { EmailTestApiApp } from './app/emailTestApi';
 
 const path = require('path');
 
-// tslint:disable-next-line:no-floating-promises
 (async () => {
     const outDir = path.resolve(__dirname, '..', '..', 'pack');
     try {
@@ -34,4 +33,4 @@ const path = require('path');
         }),
         layeredLambdas,
     ).synth();
-})();
+})().catch(console.error);
