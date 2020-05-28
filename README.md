@@ -2,6 +2,14 @@
 
 GraphQL API for receiving emails in order to e2e test email sending built on top of AWS.
 
+## Getting started
+Set up your `.env` file by copying sample:
+```bash
+cp .env.sample .env
+```
+
+And then find your iAM key id/secret for the account. See this page for details on all the AWS acccounts: https://projecttools.nordicsemi.no/confluence/display/IRIS/Cloud+Service+AWS+Accounts
+
 ## Component Diagram
 
 [![Component Diagram](./docs/Component%20diagram_%20Email%20Test%20API%20-%20Email%20Test%20API.jpg)](https://miro.com/app/board/o9J_kxMnIv0=/)
